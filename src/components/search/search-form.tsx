@@ -11,6 +11,7 @@ interface SearchFormProps {
   defaultCategory?: string;
 }
 
+
 export function SearchForm({
   categories,
   defaultQuery = "",
