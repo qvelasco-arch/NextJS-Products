@@ -54,11 +54,13 @@ export function SearchForm({
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
   // Search immediately on category change
   useEffect(() => {
     pushSearch(query, category);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category]);
 
   function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {

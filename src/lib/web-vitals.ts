@@ -1,4 +1,4 @@
-import { onCLS, onINP, onLCP } from 'web-vitals'
+import { onCLS, onINP, onLCP, type Metric } from 'web-vitals'
 
 export function registerWebVitals() {
   onLCP((metric) => {
@@ -17,7 +17,7 @@ export function registerWebVitals() {
   })
 }
 
-function sendToAnalytics(metric: any) {
+function sendToAnalytics(metric: Metric) {
   const { id, name, value, rating } = metric
 
   fetch('/api/analytics/vitals', {

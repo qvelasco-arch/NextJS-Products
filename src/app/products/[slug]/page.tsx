@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import type { Metadata } from "next";
 import { fetchProduct, fetchAllProductSlugs } from "@/lib/api";
 import { formatPrice } from "@/lib/utils";
@@ -51,13 +52,13 @@ export default async function ProductPage({ params }: Props) {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-xs text-[--muted] mb-8">
-        <a href="/" className="hover:text-white transition-colors">
+        <Link href="/" className="hover:text-white transition-colors">
           Home
-        </a>
+        </Link>
         <span>/</span>
-        <a href="/search" className="hover:text-white transition-colors">
+        <Link href="/search" className="hover:text-white transition-colors">
           Products
-        </a>
+        </Link>
         <span>/</span>
         <span className="text-white">{product.name}</span>
       </nav>

@@ -1,9 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { X, ShoppingBag } from "lucide-react";
 import type { Cart } from "@/lib/types";
 import { formatPrice } from "@/lib/utils";
@@ -33,7 +32,7 @@ export function CartDrawer({ onClose }: CartDrawerProps) {
   const router = useRouter();
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(true);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
 
   const refresh = useCallback(async () => {
     const res = await fetch("/api/cart");
@@ -43,7 +42,7 @@ export function CartDrawer({ onClose }: CartDrawerProps) {
   }, [router]);
 
   useEffect(() => {
-    setMounted(true);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     refresh().finally(() => setLoading(false));
   }, [refresh]);
 

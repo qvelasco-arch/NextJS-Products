@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ShoppingBag, Check, Loader2 } from "lucide-react";
 import { addToCart } from "@/lib/cart-actions";
 import { QuantitySelector } from "@/components/quantity-selector";
@@ -19,13 +19,11 @@ export function AddToCartButton({
   const [quantity, setQuantity] = useState(1);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
-  useEffect(() => {
-    setQuantity((prev) => Math.max(1, Math.min(prev, maxStock)));
-  }, [maxStock]);
+  const effectiveQuantity = Math.max(1, Math.min(quantity, maxStock));
 
   async function handleAddToCart() {
     setStatus("loading");
-    const result = await addToCart(productId, quantity);
+    const result = await addToCart(productId, effectiveQuantity);
     if (result.success) {
       setStatus("success");
       setTimeout(() => setStatus("idle"), 2000);
@@ -40,7 +38,7 @@ export function AddToCartButton({
       <div className="flex items-center gap-4">
         <span className="text-sm text-[--muted]">Quantity</span>
         <QuantitySelector
-          quantity={quantity}
+          quantity={effectiveQuantity}
           max={maxStock}
           onChange={setQuantity}
         />
