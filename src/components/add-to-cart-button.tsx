@@ -5,8 +5,6 @@ import { ShoppingBag, Check, Loader2 } from "lucide-react";
 import { addToCart } from "@/lib/cart-actions";
 import { QuantitySelector } from "@/components/quantity-selector";
 
-const MAX_PER_ORDER = 10;
-
 interface AddToCartButtonProps {
   productId: string;
   maxStock: number;
@@ -18,7 +16,6 @@ export function AddToCartButton({
   maxStock,
   inStock,
 }: AddToCartButtonProps) {
-  const effectiveMax = Math.min(MAX_PER_ORDER, maxStock);
   const [quantity, setQuantity] = useState(1);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
@@ -38,16 +35,11 @@ export function AddToCartButton({
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-4">
         <span className="text-sm text-[--muted]">Quantity</span>
-        <div className="flex flex-col gap-1">
-          <QuantitySelector
-            quantity={quantity}
-            max={effectiveMax}
-            onChange={setQuantity}
-          />
-          {MAX_PER_ORDER <= maxStock && (
-            <p className="text-xs text-[--muted]">Max {MAX_PER_ORDER} per order</p>
-          )}
-        </div>
+        <QuantitySelector
+          quantity={quantity}
+          max={maxStock}
+          onChange={setQuantity}
+        />
       </div>
 
       <button

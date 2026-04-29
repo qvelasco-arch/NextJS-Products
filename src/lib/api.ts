@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { cacheLife, cacheTag } from "next/cache";
 import type {
   Product,
@@ -96,7 +97,7 @@ export async function fetchPromotion(): Promise<Promotion | null> {
 
 // ─── Dynamic fetchers (no cache — real-time data) ────────────────────────────
 
-export async function fetchStock(productId: string): Promise<StockInfo | null> {
+export const fetchStock = cache(async (productId: string): Promise<StockInfo | null> => {
   const res = await fetch(`${BASE_URL}/products/${productId}/stock`, {
     headers,
     cache: "no-store",
@@ -104,7 +105,7 @@ export async function fetchStock(productId: string): Promise<StockInfo | null> {
   if (!res.ok) return null;
   const json: ApiResponse<StockInfo> = await res.json();
   return json.data;
-}
+});
 
 export async function fetchCart(token: string): Promise<Cart | null> {
   const res = await fetch(`${BASE_URL}/cart`, {
