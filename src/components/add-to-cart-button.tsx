@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ShoppingBag, Check, Loader2 } from "lucide-react";
 import { addToCart } from "@/lib/cart-actions";
 import { QuantitySelector } from "@/components/quantity-selector";
@@ -18,6 +18,10 @@ export function AddToCartButton({
 }: AddToCartButtonProps) {
   const [quantity, setQuantity] = useState(1);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+
+  useEffect(() => {
+    setQuantity((prev) => Math.max(1, Math.min(prev, maxStock)));
+  }, [maxStock]);
 
   async function handleAddToCart() {
     setStatus("loading");

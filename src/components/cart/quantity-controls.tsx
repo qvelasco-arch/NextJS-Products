@@ -7,26 +7,41 @@ import { updateQuantity, removeFromCart } from "@/lib/cart-actions";
 interface CartQuantityControlsProps {
   productId: string;
   quantity: number;
+  onMutate?: () => void;
 }
 
 export function CartQuantityControls({
   productId,
   quantity,
+  onMutate,
 }: CartQuantityControlsProps) {
   const [isPending, startTransition] = useTransition();
   const [localQty, setLocalQty] = useState(quantity);
+  const [inputValue, setInputValue] = useState(String(quantity));
 
   function handleUpdate(newQty: number) {
     setLocalQty(newQty);
+    setInputValue(String(newQty));
     startTransition(async () => {
       await updateQuantity(productId, newQty);
+      onMutate?.();
     });
   }
 
   function handleRemove() {
     startTransition(async () => {
       await removeFromCart(productId);
+      onMutate?.();
     });
+  }
+
+  function commitInput() {
+    const val = parseInt(inputValue, 10);
+    if (!isNaN(val) && val >= 1 && val !== localQty) {
+      handleUpdate(val);
+    } else {
+      setInputValue(String(localQty));
+    }
   }
 
   return (
@@ -41,13 +56,22 @@ export function CartQuantityControls({
           <Minus className="w-3.5 h-3.5" />
         </button>
 
-        <span className="w-8 text-center text-sm font-medium">
-          {isPending ? (
-            <Loader2 className="w-3.5 h-3.5 animate-spin mx-auto text-[--muted]" />
-          ) : (
-            localQty
-          )}
-        </span>
+        {isPending ? (
+          <span className="w-8 flex items-center justify-center">
+            <Loader2 className="w-3.5 h-3.5 animate-spin text-[--muted]" />
+          </span>
+        ) : (
+          <input
+            type="number"
+            min={1}
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onBlur={commitInput}
+            onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
+            disabled={isPending}
+            className="w-8 text-center text-sm font-medium bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+          />
+        )}
 
         <button
           onClick={() => handleUpdate(localQty + 1)}

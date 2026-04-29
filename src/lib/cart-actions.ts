@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import {
   createCart,
+  fetchCart,
   addCartItem,
   updateCartItem,
   removeCartItem,
@@ -45,7 +46,12 @@ export async function addToCart(productId: string, quantity: number) {
     const token = await getOrCreateToken();
     if (!token) return { success: false, error: "Could not create cart" };
 
-    const cart = await addCartItem(token, productId, quantity);
+    const existing = await fetchCart(token);
+    const alreadyInCart = existing?.items.some((i) => i.productId === productId);
+
+    const cart = alreadyInCart
+      ? await updateCartItem(token, productId, quantity)
+      : await addCartItem(token, productId, quantity);
     if (!cart) return { success: false, error: "Failed to add item" };
 
     revalidatePath("/cart");
