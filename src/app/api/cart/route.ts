@@ -5,5 +5,5 @@ export async function GET() {
   const token = await getCartToken();
   if (!token) return Response.json(null);
   const cart = await fetchCart(token);
-  return Response.json(cart);
+  return Response.json(cart ?? null);
 }

@@ -1,46 +1,73 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { Minus, Plus, Trash2, Loader2 } from "lucide-react";
 import { updateQuantity, removeFromCart } from "@/lib/cart-actions";
+import { usePageStock } from "@/lib/stock-context";
 
 interface CartQuantityControlsProps {
   productId: string;
   quantity: number;
+  maxQuantity?: number | null;
   onMutate?: () => void;
 }
 
 export function CartQuantityControls({
   productId,
   quantity,
+  maxQuantity,
   onMutate,
 }: CartQuantityControlsProps) {
+  const effectiveMax = maxQuantity ?? Infinity;
+  const { setStock } = usePageStock();
   const [isPending, startTransition] = useTransition();
   const [localQty, setLocalQty] = useState(quantity);
   const [inputValue, setInputValue] = useState(String(quantity));
+  const requestedQtyRef = useRef(quantity);
+
+  useEffect(() => {
+    if (!isPending) {
+      if (quantity !== requestedQtyRef.current) {
+        // Server capped the qty — real stock is at most this value
+        setStock(productId, quantity);
+      }
+      requestedQtyRef.current = quantity;
+      setLocalQty(quantity);
+      setInputValue(String(quantity));
+    }
+  }, [quantity, isPending, productId, setStock]);
 
   function handleUpdate(newQty: number) {
+    requestedQtyRef.current = newQty;
     setLocalQty(newQty);
     setInputValue(String(newQty));
     startTransition(async () => {
       await updateQuantity(productId, newQty);
-      onMutate?.();
+      await onMutate?.();
     });
   }
 
   function handleRemove() {
     startTransition(async () => {
       await removeFromCart(productId);
-      onMutate?.();
+      await onMutate?.();
     });
   }
 
   function commitInput() {
     const val = parseInt(inputValue, 10);
-    if (!isNaN(val) && val >= 1 && val !== localQty) {
-      handleUpdate(val);
-    } else {
+    if (isNaN(val) || val < 1) {
       setInputValue(String(localQty));
+      return;
+    }
+    if (val > localQty && localQty >= effectiveMax) {
+      setInputValue(String(localQty));
+      return;
+    }
+    if (val !== localQty) {
+      handleUpdate(Math.min(val, effectiveMax));
+    } else {
+      setInputValue(String(val));
     }
   }
 
@@ -48,7 +75,7 @@ export function CartQuantityControls({
     <div className="flex items-center gap-2">
       <div className="flex items-center gap-1 border border-[--border] rounded-lg overflow-hidden">
         <button
-          onClick={() => handleUpdate(localQty - 1)}
+          onClick={() => handleUpdate(Math.min(localQty - 1, effectiveMax))}
           disabled={isPending || localQty <= 1}
           className="w-8 h-8 flex items-center justify-center text-[--muted] hover:text-white hover:bg-[--card-hover] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           aria-label="Decrease quantity"
@@ -75,7 +102,7 @@ export function CartQuantityControls({
 
         <button
           onClick={() => handleUpdate(localQty + 1)}
-          disabled={isPending}
+          disabled={isPending || localQty >= effectiveMax}
           className="w-8 h-8 flex items-center justify-center text-[--muted] hover:text-white hover:bg-[--card-hover] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           aria-label="Increase quantity"
         >

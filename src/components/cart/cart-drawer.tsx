@@ -2,14 +2,15 @@
 
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
-import { useRouter } from "next/navigation";
 import { X, ShoppingBag } from "lucide-react";
 import type { Cart } from "@/lib/types";
 import { formatPrice } from "@/lib/utils";
 import { CartItem } from "@/components/cart/cart-item";
+import { usePageStock } from "@/lib/stock-context";
 
 interface CartDrawerProps {
   onClose: () => void;
+  onTotalItemsChange?: (n: number) => void;
 }
 
 function CartSkeleton() {
@@ -28,21 +29,25 @@ function CartSkeleton() {
   );
 }
 
-export function CartDrawer({ onClose }: CartDrawerProps) {
-  const router = useRouter();
+export function CartDrawer({ onClose, onTotalItemsChange }: CartDrawerProps) {
+  const { getStock } = usePageStock();
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(true);
   const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
 
   const refresh = useCallback(async () => {
     const res = await fetch("/api/cart");
-    const data = await res.json();
+    const data: Cart | null = await res.json();
+    if (!data) {
+      setCart(null);
+      onTotalItemsChange?.(0);
+      return;
+    }
     setCart(data);
-    router.refresh();
-  }, [router]);
+    onTotalItemsChange?.(data.totalItems);
+  }, [onTotalItemsChange]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     refresh().finally(() => setLoading(false));
   }, [refresh]);
 
@@ -55,6 +60,8 @@ export function CartDrawer({ onClose }: CartDrawerProps) {
       document.body.style.overflow = "";
     };
   }, [onClose]);
+
+  const onMutate = useCallback(() => refresh(), [refresh]);
 
   if (!mounted) return null;
 
@@ -100,7 +107,12 @@ export function CartDrawer({ onClose }: CartDrawerProps) {
           ) : (
             <div className="px-4">
               {cart!.items.map((item) => (
-                <CartItem key={item.productId} item={item} onMutate={refresh} />
+                <CartItem
+                  key={item.productId}
+                  item={item}
+                  stock={getStock(item.product?.id ?? item.productId)}
+                  onMutate={onMutate}
+                />
               ))}
             </div>
           )}

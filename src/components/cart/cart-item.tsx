@@ -6,10 +6,11 @@ import { CartQuantityControls } from "./quantity-controls";
 
 interface CartItemProps {
   item: CartItemType;
+  stock?: number | null;
   onMutate?: () => void;
 }
 
-export function CartItem({ item, onMutate }: CartItemProps) {
+export function CartItem({ item, stock, onMutate }: CartItemProps) {
   const { product, quantity, lineTotal } = item;
 
   return (
@@ -49,6 +50,7 @@ export function CartItem({ item, onMutate }: CartItemProps) {
         <CartQuantityControls
           productId={product.id}
           quantity={quantity}
+          maxQuantity={stock}
           onMutate={onMutate}
         />
       </div>

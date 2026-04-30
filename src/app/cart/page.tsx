@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
 import { getCartToken } from "@/lib/cart-actions";
-import { fetchCart } from "@/lib/api";
+import { fetchCart, fetchStock } from "@/lib/api";
 import { CartItem } from "@/components/cart/cart-item";
 import { CartSummary } from "@/components/cart/cart-summary";
 
@@ -16,6 +16,14 @@ async function CartContent() {
   const token = await getCartToken();
   const cart = token ? await fetchCart(token) : null;
   const isEmpty = !cart || cart.items.length === 0;
+
+  const stockByProductId: Record<string, number> = {};
+  if (cart && !isEmpty) {
+    const stocks = await Promise.all(cart.items.map((item) => fetchStock(item.product.id)));
+    cart.items.forEach((item, i) => {
+      stockByProductId[item.product.id] = stocks[i]?.stock ?? Infinity;
+    });
+  }
 
   if (isEmpty) {
     return (
@@ -41,7 +49,11 @@ async function CartContent() {
       <div className="lg:col-span-2">
         <div className="bg-[--card] border border-[--border] rounded-xl px-4">
           {cart.items.map((item) => (
-            <CartItem key={item.productId} item={item} />
+            <CartItem
+              key={item.productId}
+              item={item}
+              stock={stockByProductId[item.product.id]}
+            />
           ))}
         </div>
         <div className="mt-4">

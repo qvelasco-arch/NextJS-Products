@@ -74,7 +74,6 @@ export async function updateQuantity(productId: string, quantity: number) {
     const cart = await updateCartItem(token, productId, quantity);
     if (!cart) return { success: false, error: "Failed to update item" };
 
-    revalidatePath("/cart");
     return { success: true, cart };
   } catch {
     return { success: false, error: "An error occurred" };
@@ -94,7 +93,6 @@ export async function removeFromCart(productId: string) {
     const cart = await removeCartItem(token, productId);
     if (!cart) return { success: false, error: "Failed to remove item" };
 
-    revalidatePath("/cart");
     return { success: true, cart };
   } catch {
     return { success: false, error: "An error occurred" };

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ShoppingBag, Check, Loader2 } from "lucide-react";
 import { addToCart } from "@/lib/cart-actions";
 import { QuantitySelector } from "@/components/quantity-selector";
+import { usePageStock } from "@/lib/stock-context";
 
 interface AddToCartButtonProps {
   productId: string;
@@ -16,8 +17,13 @@ export function AddToCartButton({
   maxStock,
   inStock,
 }: AddToCartButtonProps) {
+  const { setStock } = usePageStock();
   const [quantity, setQuantity] = useState(1);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+
+  useEffect(() => {
+    setStock(productId, maxStock);
+  }, [productId, maxStock, setStock]);
 
   const effectiveQuantity = Math.max(1, Math.min(quantity, maxStock));
 

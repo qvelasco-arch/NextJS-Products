@@ -9,18 +9,21 @@ interface SearchFormProps {
   categories: Category[];
   defaultQuery?: string;
   defaultCategory?: string;
+  startTransition?: (fn: () => void) => void;
 }
-
 
 export function SearchForm({
   categories,
   defaultQuery = "",
   defaultCategory = "",
+  startTransition,
 }: SearchFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [query, setQuery] = useState(defaultQuery);
-  const [category, setCategory] = useState(defaultCategory);
+  const [query, setQuery] = useState(() => searchParams.get("q") ?? defaultQuery);
+  const [category, setCategory] = useState(
+    () => searchParams.get("category") ?? defaultCategory
+  );
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const pushSearch = useCallback(
@@ -36,9 +39,14 @@ export function SearchForm({
       } else {
         params.delete("category");
       }
-      router.push(`/search?${params.toString()}`);
+      const push = () => router.push(`/search?${params.toString()}`);
+      if (startTransition) {
+        startTransition(push);
+      } else {
+        push();
+      }
     },
-    [router, searchParams]
+    [router, searchParams, startTransition]
   );
 
   // Auto-search when query ≥ 3 chars
@@ -63,7 +71,7 @@ export function SearchForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category]);
 
-  function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
+  function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     if (debounceRef.current) clearTimeout(debounceRef.current);
     pushSearch(query, category);
