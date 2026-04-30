@@ -18,7 +18,7 @@ A demo e-commerce storefront built with Next.js 16 (App Router). Users can brows
 - **Product listing** — paginated catalog with category and search filters
 - **Product detail** — real-time stock indicator, editable quantity selector, Add to Cart
 - **Cart drawer** — slides in from the header icon without leaving the page; supports editing and removing items inline
-- **Stock-aware quantity selection** — quantity is always capped to available stock; recalculates after cart mutations
+- **Stock-aware quantity selection** — quantity is capped to the stock value fetched by the product page; editing in the cart snaps to that cap client-side without an extra stock API call
 - **Smart Add to Cart** — if the item is already in the cart, subsequent adds set the quantity instead of accumulating
 
 ## Project Structure
@@ -27,7 +27,7 @@ A demo e-commerce storefront built with Next.js 16 (App Router). Users can brows
 src/
 ├── app/
 │   ├── api/
-│   │   ├── cart/route.ts          # Proxies cart data for client-side drawer
+│   │   ├── cart/route.ts          # Returns cart data for the client-side drawer (no stock fetch)
 │   │   └── analytics/vitals/      # Web Vitals reporting endpoint
 │   ├── cart/page.tsx              # Full cart page (direct URL access)
 │   ├── products/[slug]/page.tsx   # Product detail page
@@ -41,15 +41,17 @@ src/
 │   │   ├── cart-item.tsx          # Individual cart item with controls
 │   │   ├── cart-summary.tsx       # Order summary with checkout CTA
 │   │   └── quantity-controls.tsx  # Editable +/- controls with trash button
-│   ├── add-to-cart-button.tsx     # Client component — quantity + add action
+│   ├── add-to-cart-button.tsx     # Client component — quantity + add action; writes stock to context
 │   ├── add-to-cart-section.tsx    # Server wrapper — fetches stock for button
 │   ├── product-card.tsx           # Product card linking to detail page
+│   ├── providers.tsx              # Client boundary — wraps layout with context providers
 │   ├── quantity-selector.tsx      # Reusable editable quantity input
 │   ├── stock-indicator.tsx        # Real-time stock badge (Server Component)
 │   └── ...                        # Header, footer, hero, search form, etc.
 └── lib/
     ├── api.ts                     # All external API calls with cache strategies
     ├── cart-actions.ts            # Server Actions for cart mutations
+    ├── stock-context.tsx          # React context sharing product-page stock with the cart drawer
     ├── types.ts                   # Shared TypeScript interfaces
     └── utils.ts                   # formatPrice and other helpers
 ```
